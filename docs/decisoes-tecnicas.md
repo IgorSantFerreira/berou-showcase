@@ -6,27 +6,27 @@ Cada decisão abaixo traz o problema que a motivou, o que foi escolhido e o cust
 
 **Implementado desde a 4.0.**
 
-Nas versões 3.x, o pipeline de mídia rodava em Python. Três problemas foram documentados nessa época: o GIL e as pausas de coleta de lixo quebravam a cadência entre áudio e vídeo, cada viewer exigia um processo FFmpeg próprio no host e o transporte ICE em Python ficava no caminho crítico da mídia.
+Nas versões 3.x, parte do pipeline de mídia e do transporte passava pelo runtime Python. Havia problemas de cadência e um processo FFmpeg por viewer, o que duplicava o trabalho de codificação no host. O GIL e as pausas de coleta de lixo eram fatores de risco para a previsibilidade do processamento, mas não foram isolados como a causa única das falhas observadas.
 
 A 4.0 moveu captura, codificação, distribuição e transporte para um motor em Rust, executado como processo separado. O Python passou a cuidar só da interface e da orquestração.
 
-**Trade-off:** o protocolo entre Python e Rust virou uma interface que precisa ser versionada e testada dos dois lados. Em troca, a mídia ganhou um runtime sem GIL e sem coleta de lixo, e uma falha no motor não derruba a interface.
+**Trade-off:** o protocolo entre Python e Rust passou a exigir versionamento e testes dos dois lados. Em contrapartida, o processamento de mídia saiu do runtime Python e passou a ser isolado em outro processo. Isso permite tratar falhas do motor sem necessariamente encerrar a interface.
 
-## 2. Uma codificação no host, N viewers
+## 2. Uma codificação para múltiplos espectadores
 
 **Implementado.**
 
-Em vez de codificar um stream por viewer, o host codifica uma vez e publica em um servidor MediaMTX local, de onde cada viewer lê.
+O host mantém uma única captura e um único encoder de vídeo. O fluxo resultante é publicado no MediaMTX local e distribuído aos viewers sem nova codificação para cada conexão.
 
-**Trade-off:** o custo de CPU e GPU no host deixa de crescer com o número de viewers, mas todos recebem a mesma qualidade. Não há adaptação de bitrate por viewer.
+**Impacto:** adicionar espectadores não cria novos processos de captura ou de encoding, nem multiplica a carga principal de CPU e GPU associada à produção do vídeo. A distribuição ainda utiliza rede, buffers e processamento de transporte por conexão, mas não repete o trabalho pesado de codificação. Como todos recebem o mesmo fluxo, ainda não existe adaptação de bitrate individual.
 
 ## 3. HEVC com encoder de hardware e fallback ordenado
 
 **Implementado.**
 
-O motor tenta encoders de hardware de AMD, NVIDIA e Intel, nessa ordem, e usa o libx265 por software como último recurso. Um encoder só é aceito se sustentar pelo menos 95% da cadência pedida. Um encoder recusado fica fora das tentativas por um período curto e depois volta a ser testado. Os encoders de hardware recebem o formato de pixel NV12 diretamente, o que evita uma conversão de cor.
+O motor tenta encoders de hardware de AMD, NVIDIA e Intel, nessa ordem, e usa o libx265 por software como último recurso. Um encoder só é aceito se sustentar pelo menos 95% da cadência pedida. Um encoder recusado fica fora das tentativas por um período curto e depois volta a ser testado. Os encoders de hardware recebem o formato NV12, evitando uma reorganização adicional do formato planar no caminho de codificação.
 
-**Trade-off:** HEVC reduz o bitrate para a mesma qualidade, mas exige suporte a decodificação no viewer. A regra de admissão nasceu de um problema real, descrito em [cadência de vídeo](estudos/cadencia-de-video.md).
+**Trade-off:** HEVC pode entregar qualidade comparável com menos bitrate, dependendo da configuração e do conteúdo, mas exige suporte à decodificação no viewer. A regra de admissão nasceu de um problema real, descrito em [cadência de vídeo](estudos/cadencia-de-video.md).
 
 ## 4. SRT dentro do túnel do motor
 
@@ -50,7 +50,7 @@ O Berou não tenta conexão direta entre as máquinas. Todo tráfego pela intern
 
 A sinalização roda em Cloudflare Workers com Durable Objects, que guardam o estado de cada sala.
 
-**Trade-off:** não há servidor sempre ligado para manter, e como o backend não toca em mídia, ele não paga pela banda dos streams. O preço é ficar preso ao modelo de execução e às limitações da plataforma escolhida.
+**Trade-off:** o backend de sinalização não precisa manter um servidor de aplicação sempre ligado nem processar os streams de vídeo. Isso não elimina o tráfego e o custo do relay TURN, que distribui os pacotes entre os participantes. A implementação também fica sujeita ao modelo de execução e aos limites da plataforma.
 
 ## 7. Observabilidade sem SDK no cliente
 
@@ -76,4 +76,4 @@ Cada versão tem um manifesto assinado, e o cliente verifica a assinatura antes 
 
 Com o código dividido em repositórios, um arquivo no repositório de integração fixa a revisão de cada componente usada em um release, e o build embute essas revisões no executável.
 
-**Trade-off:** cada release exige atualizar esse arquivo de forma deliberada. Em troca, qualquer build é reproduzível e um relatório de diagnóstico identifica a combinação exata de componentes.
+**Trade-off:** cada release exige atualizar deliberadamente o arquivo de revisões. Em troca, é possível rastrear quais versões dos componentes entraram em cada build e identificar essa combinação em um diagnóstico. A reprodução integral de um build também depende das ferramentas, das dependências e do ambiente de empacotamento.
