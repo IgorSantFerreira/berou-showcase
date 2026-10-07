@@ -54,11 +54,11 @@ As investigações do projeto seguem um padrão: sintoma, hipóteses, evidência
 
 ## Exemplo de medição: formato de pixel e uso de GPU
 
-**Resultado observado, sem significância estatística.** Para avaliar o efeito de entregar NV12 em vez de BGRA ao encoder de hardware, uma fonte sintética 1440p60 foi codificada em HEVC 1080p a 10 Mbps em uma GPU AMD RX 6750 XT, com cinco amostras do contador de uso de GPU do Windows por variante:
+**Resultado observado, sem significância estatística.** O teste comparou o caminho anterior, com formato planar YUV420P na entrada do encoder de hardware, à entrega em NV12. A fonte sintética original era BGRA, em 2560×1440 a 60 FPS; a saída foi codificada em HEVC 1920×1080 a 10 Mbps em uma GPU AMD RX 6750 XT. Foram coletadas cinco amostras dos contadores de uso de GPU do Windows por variante, durante uma execução curta:
 
-| Métrica (uso médio da GPU) | BGRA | NV12 |
+| Métrica (uso médio da GPU) | Caminho anterior | NV12 |
 |---|---|---|
 | Motor Encode/3D | 5,23% | 3,98% |
 | Motor Video Codec | 16,07% | 15,42% |
 
-A redução no motor 3D é coerente com a eliminação da conversão de cor na GPU. No player não houve ganho claro. Cinco amostras de uma execução curta não sustentam uma conclusão estatística, e o próprio registro interno diz isso.
+A queda observada no contador do motor 3D é compatível com a eliminação de uma reorganização de formato de pixel no caminho do encoder. O teste não isolou todas as possíveis causas dessa diferença. No player não houve ganho claro. Cinco amostras de uma execução curta não permitem generalizar o resultado para jogos, outros drivers ou uso prolongado.
