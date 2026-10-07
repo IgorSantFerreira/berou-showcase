@@ -38,6 +38,6 @@ Depois da correção, com captura DXGI e encoder AMD em 1080p60, foram 358 trans
 
 O teste foi local, com áudio silencioso e sem conexão de longa distância. Ele mostra que o pipeline preserva a cadência. Não garante 60 imagens únicas por segundo em qualquer rede ou máquina.
 
-## O que este caso ensina
+## Conclusão
 
-Uma métrica pode estar correta e mesmo assim medir a coisa errada. O FPS de saída era verdadeiro, mas não respondia à pergunta que importava. A medição útil exigiu um sinal de teste construído para isso.
+O FPS informado pelo encoder era uma medida válida de saída, mas não indicava quantas imagens novas chegavam ao espectador. Foi necessário usar um padrão sintético com contador para medir transições reais de conteúdo e identificar a duplicação de quadros.
