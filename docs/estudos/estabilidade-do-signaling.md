@@ -22,6 +22,6 @@ O backend passou a registrar, por minuto e sem dados que identifiquem participan
 
 No cliente, a reentrada automática em uma sala salva já existia, com número limitado de tentativas. A mídia não é reiniciada automaticamente nesse caso.
 
-## O que este caso ensina
+## Limite da conclusão
 
-Nem toda investigação termina com a causa encontrada. Corrigir um defeito real encontrado no caminho, sem afirmar que ele era a causa, e instrumentar o sistema para a próxima ocorrência é um resultado honesto e útil.
+A condição de corrida no envio foi reproduzida e corrigida. Isso não comprova que ela causou a desconexão original, que permaneceu sem explicação conclusiva. A instrumentação adicionada deve permitir confrontar hipóteses com registros mais completos em uma próxima ocorrência.
