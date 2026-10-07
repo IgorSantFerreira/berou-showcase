@@ -16,7 +16,7 @@ Situação em outubro de 2026. A última versão estável publicada é a 4.4.0, 
 
 ## Implementado
 
-- Compartilhamento de tela e do áudio de um aplicativo para múltiplos viewers, com uma única codificação no host.
+- Compartilhamento de tela e do áudio de um aplicativo para múltiplos viewers, com captura e codificação de vídeo compartilhadas. Novos espectadores não exigem outros encoders no host.
 - Encoders de hardware AMD, NVIDIA e Intel, com fallback para software.
 - Conexão pela internet via relay TURN, com túnel cifrado.
 - Salas por convite, chat temporário e voz.
@@ -33,7 +33,7 @@ Situação em outubro de 2026. A última versão estável publicada é a 4.4.0, 
 ## Limitações conhecidas
 
 - **Somente Windows.** Captura, áudio e gerenciamento de processos usam APIs do Windows.
-- **Mesma qualidade para todos os viewers.** Não há adaptação de bitrate por viewer.
+- **Mesma qualidade para todos os viewers.** O vídeo é codificado uma só vez e não há adaptação de bitrate por espectador. O transporte e a banda de envio continuam sendo necessários para cada conexão.
 - **Latência e custo do relay.** Todo tráfego pela internet passa por TURN, e o uso é limitado por um orçamento no backend.
 - **Causa de desconexão em aberto.** A desconexão sem fechamento do protocolo descrita no [estudo de signaling](estudos/estabilidade-do-signaling.md) não teve a causa original provada.
 - **Sem pipeline de integração.** A combinação de componentes de um release é fixada por arquivo, mas não há teste automatizado da integração entre eles.
