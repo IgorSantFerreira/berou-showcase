@@ -27,6 +27,6 @@ Os relógios das duas máquinas não estavam sincronizados, então os eventos fo
 
 O socket aceito passou a ser configurado explicitamente como bloqueante, com timeout de escrita de 500 ms. Foram adicionados testes que reduzem o buffer de envio para forçar a condição de buffer cheio.
 
-## O que este caso ensina
+## Diagnóstico final
 
-O erro reportado não era a falha. Era uma condição normal de rede tratada como fatal, e entender o modelo de sockets da plataforma foi o que separou causa de efeito.
+O código interpretava uma tentativa de escrita que bloquearia como se o socket estivesse quebrado. A distinção entre essas situações, considerando o comportamento de sockets não bloqueantes no Windows, evitou reconstruir a transmissão por uma condição transitória de buffer cheio.
