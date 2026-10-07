@@ -40,7 +40,7 @@ Responsabilidades:
 - **Captura de tela** pela API de duplicação de desktop do Windows (DXGI), com fallback para GDI quando DXGI não está disponível ou quando a captura é de uma janela específica.
 - **Captura de áudio** de um aplicativo específico (WASAPI process loopback), além de um canal de voz com Opus.
 - **Codificação** em HEVC via FFmpeg, tentando encoders de hardware na ordem AMD AMF, NVIDIA NVENC e Intel QSV, e caindo para o encoder de software libx265. Um encoder que falha fica fora das tentativas por um período curto e volta a ser testado depois. O último que funcionou é tentado primeiro.
-- **Distribuição**: o host codifica uma única vez e publica o stream em um servidor MediaMTX local via SRT. Cada viewer lê desse servidor.
+- **Distribuição**: o host captura e codifica o vídeo uma única vez e publica o stream no MediaMTX local via SRT. Os viewers consomem esse mesmo fluxo, sem novos processos de captura ou de codificação.
 - **Transporte entre máquinas** por ICE com relay TURN. O tráfego entre as máquinas viaja cifrado e autenticado dentro de um túnel UDP controlado pelo motor.
 
 ### Backend de sinalização (Cloudflare Workers)
@@ -61,3 +61,5 @@ Um Worker separado recebe a telemetria dos clientes e a encaminha para a stack d
 4. Na máquina do viewer, o motor expõe o stream em um endpoint local, e o player lê dali.
 
 Assim, o SRT controla perda e latência de ponta a ponta entre o MediaMTX do host e o player do viewer, mas a rede pública só vê o túnel cifrado. Nenhuma porta SRT fica exposta fora da máquina.
+
+A entrada de mais um espectador não altera o trabalho de captura ou de encoding do vídeo: o mesmo fluxo codificado é encaminhado a outra conexão. A carga principal de CPU e GPU desse pipeline não é replicada por viewer; o trabalho adicional está no transporte e no envio dos pacotes.
