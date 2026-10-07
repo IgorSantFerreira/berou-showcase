@@ -4,6 +4,8 @@ O Berou é um aplicativo de compartilhamento de tela e streaming de baixa latên
 
 Reuni aqui a arquitetura, algumas decisões de engenharia e investigações de problemas encontrados durante o desenvolvimento. O código-fonte e a infraestrutura do Berou são privados e não fazem parte deste repositório.
 
+Uma das escolhas centrais foi manter a captura e a codificação de vídeo em um único pipeline no host. Cada espectador recebe o mesmo fluxo já codificado, sem precisar iniciar outro encoder.
+
 ## Estágio atual
 
 - A última versão estável publicada é a 4.4.0. A linha 4.5 está em desenvolvimento e é distribuída em canal beta.
